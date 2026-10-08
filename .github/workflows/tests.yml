@@ -2,6 +2,7 @@ name: Run tests
 on: [push, pull_request]
 permissions:
   contents: read
+  id-token: write # Required for Qlty coverage uploads via OIDC
 
 jobs:
   test:
@@ -18,3 +19,9 @@ jobs:
         bundler: ${{ (matrix.ruby < '3' && '2.4.21') || 'latest' }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - run: bundle exec thor spec
+    - name: Upload coverage to Qlty
+      if: matrix.ruby == '3.4' && github.event.pull_request.head.repo.fork != true
+      uses: qltysh/qlty-action/coverage@v2
+      with:
+        oidc: true
+        files: coverage/.resultset.json
